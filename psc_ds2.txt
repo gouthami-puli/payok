@@ -1,0 +1,31 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import re
+DS2 = pd.ExcelFile('C:/Users/Administrator/Downloads/3ds/Python/work_tips/cohort_analysis.xlsx')
+DS2 = DS2.parse('Sheet2')
+DS2
+grouped = DS2.groupby(['Cohort_Period', 'Period']).agg({'Values': np.sum})
+grouped.head()
+def cperiod(df):
+    df['CohortPeriod'] = np.arange(len(df)) + 1
+    return df
+
+cohorts = grouped.groupby(level=0).apply(cperiod)
+cohorts
+cohorts['Values'].unstack(0)
+cohorts.reset_index(inplace=True)
+cohorts.head()
+cohorts.set_index(['Cohort_Period', 'CohortPeriod'], inplace=True)
+# create a Series holding the total size of each CohortGroup
+cohort_group_size = cohorts['Values'].groupby(level=0).first()
+cohort_group_size
+cohorts
+cohorts['Values'].unstack(0)
+user_retention = cohorts['Values'].unstack(0).divide(cohort_group_size, axis=1)
+user_retention.head(10)
+sns.set(style='white')
+plt.figure(figsize=(12, 8))
+plt.title('Cohorts: User Retention')
+sns.heatmap(user_retention.T, mask=user_retention.T.isnull(), annot=True, fmt='.0%', cmap="RdPu");
